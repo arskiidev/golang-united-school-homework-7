@@ -2,6 +2,9 @@ package coverage
 
 import (
 	"os"
+	"testing"
+	"time"
+	"fmt"
 )
 
 // DO NOT EDIT THIS FUNCTION
@@ -18,3 +21,168 @@ func init() {
 
 // WRITE YOUR CODE BELOW
 
+func Test_Len(t *testing.T) {
+	people := People{
+		{"Alex", "Lexs", time.Date(2001, time.September, 9, 1, 46, 40, 0, time.UTC)},
+		{"Andy", "Dany", time.Date(2011, time.October, 10, 2, 47, 41, 0, time.UTC)},
+		{"Jane", "Doe", time.Date(2021, time.November, 11, 3, 48, 42, 0, time.UTC)},
+	}
+	expect := 3
+	result := people.Len()
+	if expect != result {
+		t.Errorf("[FAILED] Expected: %v, Result: %v", expect, result)
+	}
+}
+
+func Test_Less(t *testing.T) {
+	tData := map[string]struct {
+		P People
+		I int
+		J int
+		Expected bool
+	}{
+		"success": {P: People{
+			{"Alex", "Lexs", time.Date(2001, time.September, 9, 1, 46, 40, 0, time.UTC)},
+			{"Andy", "Dany", time.Date(2011, time.October, 10, 2, 47, 41, 0, time.UTC)},
+			{"Jane", "Doe",  time.Date(2021, time.November, 11, 3, 48, 42, 0, time.UTC)},
+		}, I: 1, J: 2, Expected: false},
+		"equalDate": {P: People{
+			{"Alex", "Lexs", time.Date(2001, time.September, 9, 1, 46, 40, 0, time.UTC)},
+			{"Andy", "Dany", time.Date(2011, time.October, 10, 2, 47, 41, 0, time.UTC)},
+			{"Jane", "Doe",  time.Date(2011, time.October, 10, 2, 47, 41, 0, time.UTC)},
+		}, I: 1, J: 2, Expected: true},
+		"equalDateAndName": {P: People{
+			{"Alex", "Lexs", time.Date(2001, time.September, 9, 1, 46, 40, 0, time.UTC)},
+			{"Andy", "Dany", time.Date(2011, time.October, 10, 2, 47, 41, 0, time.UTC)},
+			{"Andy", "Doe",  time.Date(2011, time.October, 10, 2, 47, 41, 0, time.UTC)},
+		}, I: 1, J: 2, Expected: true},
+	}
+	for name, tCase := range tData {
+		result := tCase.P.Less(tCase.I, tCase.J)
+		if result != tCase.Expected {
+			t.Errorf("[FAILED] Test Name: %v Expected: %v, Result: %v", name, tCase.Expected, result)
+		}
+	} 
+}
+
+func Test_Swap(t *testing.T) {
+	p := People{
+		{"Alex", "Lexs", time.Date(2001, time.September, 9, 1, 46, 40, 0, time.UTC)},
+		{"Andy", "Dany", time.Date(2011, time.October, 10, 2, 47, 41, 0, time.UTC)},
+		{"Jane", "Doe",  time.Date(2021, time.November, 11, 3, 48, 42, 0, time.UTC)},
+	}
+	i := 1
+	j := 2
+	pi := p[i]
+	pj := p[j]
+	p.Swap(i, j)
+	if pi == p[i] || pj == p[j] {
+		t.Errorf("Swap failed!")
+	}
+}
+
+func Test_New(t *testing.T) {
+	tData := map[string]struct{
+		S   string
+		M   *Matrix
+		Err error
+	}{
+		"success": {
+			S: "1 2 3\n4 5 6\n7 8 9",
+			M: &Matrix{rows: 3, cols: 3, data: []int {1,2,3,4,5,6,7,8,9} },
+			Err: nil,
+		},
+		"RowsNotSameLength": {
+			S: "1 2 3\n4 6\n7 8 9",
+			M: &Matrix{rows: 3, cols: 3, data: []int {1,2,3,4,5,6,7,8,9} },
+			Err: fmt.Errorf("Rows need to be the same length"),
+		},
+		"NotANumber": {
+			S: "1 2 Y\n4 5 6\n7 8 9",
+			M: &Matrix{rows: 3, cols: 3, data: []int {1,2,3,4,5,6,7,8,9} },
+			Err: fmt.Errorf("strconv.Atoi: parsing \"Y\": invalid syntax"),
+		},
+	}
+	for name, tCase := range tData {
+		result, err := New(tCase.S)
+		if err != nil && fmt.Sprint(err) != fmt.Sprint(tCase.Err){
+			t.Errorf("[FAILED] Test Name: %v Expected: %v, Result: %v, Error: %v", name, tCase.M, result, err)
+		}
+	} 
+}
+
+
+func Test_Rows(t *testing.T){
+	matrix := Matrix{
+		rows: 3,
+		cols: 3,
+		data: []int{1, 2, 3, 4, 5, 6, 7, 8, 9},
+	}
+	row := matrix.Rows()
+	equal := true
+	matrixIndex := 0
+	for i := 0; i < len(row); i++ {
+		for j := 0; j < len(row[i]); j++ {
+			if row[i][j] != matrix.data[matrixIndex] {
+				equal = false
+				break
+			}
+			matrixIndex++
+		}
+	}
+	if !equal {
+		t.Errorf("[FAILED] Matrix: %v, Row: %v", matrix, row)
+	}
+}
+
+func Test_Cols(t *testing.T){
+	matrix := Matrix{
+		rows: 3,
+		cols: 3,
+		data: []int{1, 2, 3, 4, 5, 6, 7, 8, 9},
+	}
+	col := matrix.Cols()
+	equal := true
+	for i := 0; i < len(col); i++ {
+		for j := 0; j < len(col[i]); j++ {
+			if col[i][j] != matrix.data[j*matrix.cols+i] {
+				equal = false
+				break
+			}
+		}
+	}
+	if !equal {
+		t.Errorf("[FAILED] Matrix: %v, Row: %v", matrix, col)
+	}
+}
+
+func Test_Set(t *testing.T) {
+	tData := map[string]struct{
+		M Matrix
+		R int 
+		C int 
+		V int
+		Expect bool
+	}{
+		"success" : {
+			M: Matrix{rows: 3, cols: 3, data: []int {1,2,3,4,5,6,7,8,9} },
+			R: 0,
+			C: 0,
+			V: 999,
+			Expect: true,
+		},
+		"fail" : {
+			M: Matrix{rows: 3, cols: 3, data: []int {1,2,3,4,5,6,7,8,9} },
+			R: 33,
+			C: 33,
+			V: 111,
+			Expect: false,
+		},
+	}
+	for name, tCase := range tData {
+		result := tCase.M.Set(tCase.R, tCase.C, tCase.V)
+		if result != tCase.Expect {
+			t.Errorf("[FAILED] Test %v Set Expect: %v, Result: %v", name, tCase.Expect, result)
+		}
+	}
+}
